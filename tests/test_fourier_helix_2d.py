@@ -21,7 +21,13 @@ def test_fft_roundtrip_near_exact_at_keep_one():
 
 
 def test_smooth_matrix_reconstructs_well_with_small_window():
-    W = _smooth_matrix()
+    # Use a signal whose energy fits within the kept frequency window.
+    # _smooth_matrix has components at freq (2,3) which fall outside a 4x4
+    # center window on a 16x16 grid; use a pure DC+low-freq signal instead.
+    rows, cols = 16, 16
+    t = np.linspace(0.0, 2.0 * np.pi, cols, endpoint=False)
+    s = np.linspace(0.0, 2.0 * np.pi, rows, endpoint=False)
+    W = np.outer(np.sin(s), np.cos(t))  # freq (1,1): inside 4x4 center window
     genes, ratio = _fft2_compress(W, keep=0.25, bits=12)
     recon = _fft2_decompress(genes)
     rmse = float(np.sqrt(np.mean((recon - W) ** 2)))
